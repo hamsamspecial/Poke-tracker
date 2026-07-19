@@ -316,7 +316,8 @@ export default function Home() {
             fontSize: 12, fontWeight: 900, color: cat.color,
             background: 'white', padding: '3px 12px', borderRadius: 20,
             marginBottom: 8, letterSpacing: '-0.3px', flexShrink: 0,
-            boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+            fontFamily: "'Mona Sans', sans-serif"
           }}>
             {cat.emoji} {cat.labelKo}
           </div>
@@ -693,6 +694,7 @@ export default function Home() {
             background: selectedCategory===null ? '#1565C0' : 'white',
             color: selectedCategory===null ? 'white' : '#546E7A',
             border:`2px solid ${selectedCategory===null ? '#1565C0' : '#CFD8DC'}`, transition:'all 0.2s',
+            fontFamily: "'Mona Sans', sans-serif"
           }}>전체</button>
           {(Object.entries(CATEGORIES) as [CategoryKey, CatInfo][]).map(([k, c]) => (
             <button key={k} onClick={() => setSelectedCategory(selectedCategory===k ? null : k)} style={{
@@ -701,6 +703,7 @@ export default function Home() {
               color: selectedCategory===k ? 'white' : c.color,
               border:`2px solid ${c.color}`, transition:'all 0.2s',
               boxShadow: selectedCategory===k ? `0 4px 12px ${c.color}55` : 'none',
+              fontFamily: "'Mona Sans', sans-serif"
             }}>{c.emoji} {c.labelKo}</button>
           ))}
         </div>
