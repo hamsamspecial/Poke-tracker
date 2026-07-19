@@ -98,6 +98,7 @@ export default function Home() {
   const [editCategory, setEditCategory] = useState<CategoryKey>('life');
   const [selectedCategory, setSelectedCategory] = useState<CategoryKey | null>(null);
   const [isPokedexOpen, setIsPokedexOpen] = useState(false);
+  const [fontScale, setFontScale] = useState<number>(1);
 
   // Load habits
   useEffect(() => {
@@ -236,8 +237,8 @@ export default function Home() {
             border: '3px solid #E53935',
             boxShadow: '0 4px 20px rgba(229,57,53,0.25)',
           }}>
-            <img src="/pokemon-logo.png" alt="목표" style={{ width: 80, height: 'auto', marginBottom: 4 }} />
-            <span style={{ fontSize: 13, fontWeight: 900, color: '#E53935' }}>나의 목표</span>
+            <img src="/pokemon-logo.png" alt="목표" style={{ width: 100, height: 'auto', marginBottom: 4 }} />
+            <span style={{ fontSize: 16 * fontScale, fontWeight: 900, color: '#E53935', fontFamily: 'YKompyuta' }}>나의 목표</span>
           </div>
         );
       }
@@ -331,15 +332,17 @@ export default function Home() {
                   background: `radial-gradient(circle, ${cat.color}44 0%, transparent 70%)`,
                   filter: 'blur(8px)',
                 }} />
-                <img
-                  src={habit!.pokemon!.spriteUrl}
-                  alt="pokemon"
-                  style={{
-                    width: 88, height: 88, objectFit: 'contain', position: 'relative',
-                    filter: `drop-shadow(0 4px 14px ${cat.color}88)`,
-                    animation: done ? 'pokeBounce 0.6s ease' : undefined,
-                  }}
-                />
+                <div style={{ position: 'relative', zIndex: 10 }}>
+                  <img
+                    src={habit!.pokemon!.spriteUrl}
+                    alt="Pokemon"
+                    style={{
+                      width: 110, height: 110, objectFit: 'contain',
+                      filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.3))',
+                      animation: energy?.stage === 0 ? 'pokeBounce 2s infinite' : 'pokeBounce 1s infinite',
+                    }}
+                  />
+                </div>
               </>
             ) : (
               <EggImg catKey={catKey} size={58} />
@@ -420,11 +423,11 @@ export default function Home() {
 
           {/* 목표 이름 */}
           <div style={{
-            fontSize: 12, fontWeight: 800, color: 'white', textAlign: 'center', lineHeight: 1.3,
+            fontSize: 14 * fontScale, fontWeight: 800, color: 'white', textAlign: 'center', lineHeight: 1.3,
             padding: '4px 10px', borderRadius: 12, flexShrink: 0,
             background: habit?.title ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.08)',
             border: habit?.title ? 'none' : `1.5px dashed ${cat.color}77`,
-            maxWidth: '95%', wordBreak: 'keep-all',
+            maxWidth: '95%', wordBreak: 'keep-all', fontFamily: 'YKompyuta'
           }}>
             {habit?.title || (
               <span style={{ color: cat.color, opacity: 0.8 }}>+ 목표 입력</span>
@@ -436,11 +439,11 @@ export default function Home() {
               marginTop: 5, display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
             }}>
               <div style={{
-                fontSize: 11, fontWeight: 900, color: '#4CAF50',
+                fontSize: 12 * fontScale, fontWeight: 900, color: '#4CAF50',
                 background: 'rgba(76,175,80,0.2)', padding: '3px 12px', borderRadius: 20,
               }}>✔ 오늘 완료!</div>
               <button onClick={(e) => undoToday(habit, realIdx, e)} style={{
-                fontSize: 10, fontWeight: 800, color: '#F44336',
+                fontSize: 11 * fontScale, fontWeight: 800, color: '#F44336',
                 background: 'rgba(244,67,54,0.15)', border: 'none', padding: '3px 8px', borderRadius: 20,
                 cursor: 'pointer', transition: 'all 0.2s',
               }}>↺ 취소</button>
@@ -494,7 +497,6 @@ export default function Home() {
             {[...Array(9)].map((_, cellIdx) => {
               const realIdx = getRealIndex(blockIdx, cellIdx);
 
-              // 포켓볼 중앙
               if (realIdx === -1) {
                 return (
                   <div key={cellIdx} style={{
@@ -503,7 +505,7 @@ export default function Home() {
                     background: 'linear-gradient(135deg, #FFF3F3 0%, #FFEBEE 100%)',
                     border: '2px solid #E53935',
                   }}>
-                    <img src="/pokeball-title.png" alt="메인" style={{ width: 36, height: 36 }} />
+                    <img src="/pokeball-title.png" alt="메인" style={{ width: 48, height: 48 }} />
                   </div>
                 );
               }
@@ -517,11 +519,11 @@ export default function Home() {
                     border: `2px solid ${blockCat?.color || '#fff'}77`,
                     boxShadow: `0 0 10px ${blockCat?.color || '#fff'}33`,
                   }}>
-                    {blockCatKey && <EggImg catKey={blockCatKey} size={20} />}
+                    <img src="/pokemon-logo.png" alt="로고" style={{ width: 60, height: 'auto', marginBottom: 2 }} />
                     <span style={{
-                      fontSize: 6, fontWeight: 800, color: blockCat?.color || 'white',
+                      fontSize: 8 * fontScale, fontWeight: 800, color: blockCat?.color || 'white',
                       marginTop: 2, textAlign: 'center',
-                      maxWidth: '95%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      maxWidth: '95%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'YKompyuta'
                     }}>
                       {habit?.title || `${blockCat?.emoji}${blockCat?.labelKo}`}
                     </span>
@@ -547,7 +549,9 @@ export default function Home() {
                       border: `1px dashed ${cat?.color || '#fff'}44`,
                       transition: 'all 0.2s',
                     }}>
-                    {cat && <EggImg catKey={catKey} size={18} dimmed />}
+                    <div style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))', opacity: 0.5 }}>
+                        {cat && <EggImg catKey={catKey} size={18} />}
+                    </div>
                     <span style={{ fontSize: 6, color: 'rgba(255,255,255,0.25)', marginTop: 2, fontWeight: 700 }}>+ 추가</span>
                   </div>
                 );
@@ -585,23 +589,25 @@ export default function Home() {
                     }}>{habit.streak}🔥</div>
                   )}
 
-                  {habit.pokemon
-                    ? <img src={habit.pokemon.spriteUrl} alt="pokemon"
-                        style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))' }}/>
-                    : cat && <EggImg catKey={catKey} size={18} />
-                  }
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                    {habit.pokemon
+                      ? <img src={habit.pokemon.spriteUrl} alt="pokemon"
+                          style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))' }}/>
+                      : cat && <EggImg catKey={catKey} size={18} />
+                    }
+                  </div>
 
                   <span style={{
-                    fontSize: 6, fontWeight: 700, color: cat?.color || 'white', textAlign: 'center',
+                    fontSize: 8 * fontScale, fontWeight: 700, color: cat?.color || 'white', textAlign: 'center',
                     background: 'rgba(0,0,0,0.4)', padding: '1px 4px', borderRadius: 5,
-                    maxWidth: '95%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2,
+                    maxWidth: '95%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2, fontFamily: 'YKompyuta'
                   }}>{habit.title}</span>
 
                   {done && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
-                      <span style={{ fontSize: 7, color: '#4CAF50' }}>✔</span>
+                      <span style={{ fontSize: 9 * fontScale, color: '#4CAF50' }}>✔</span>
                       <button onClick={(e) => undoToday(habit, realIdx, e)} style={{
-                        fontSize: 6, color: '#F44336', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0
+                        fontSize: 8 * fontScale, color: '#F44336', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0
                       }}>↺</button>
                     </div>
                   )}
@@ -631,7 +637,7 @@ export default function Home() {
       background: 'linear-gradient(160deg, #EEF3FF 0%, #DCEEFF 60%, #E8F5E9 100%)',
       padding: '12px 16px',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
-      fontFamily: "'Lato', 'Segoe UI', 'Noto Sans KR', sans-serif",
+      fontFamily: "'YKompyuta', 'Mona Sans', 'Segoe UI', sans-serif",
     }}>
 
       {/* ── 헤더 ── */}
@@ -651,18 +657,25 @@ export default function Home() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => setFontScale(s => s >= 1.4 ? 1 : s + 0.2)} style={{
+            padding: '8px 14px', borderRadius: 12, fontWeight: 800, fontSize: 13, cursor: 'pointer',
+            background: fontScale === 1 ? '#FFF8E1' : fontScale === 1.2 ? '#FFECB3' : '#FFD54F',
+            color: '#F57F17', border: '2px solid #FFE082', transition: 'all 0.2s', fontFamily: 'YKompyuta'
+          }}>
+            {fontScale === 1 ? '글씨 1단계' : fontScale === 1.2 ? '글씨 2단계' : '글씨 3단계'} 🔍
+          </button>
           <button onClick={() => setBoardMode(b => b === '3x3' ? '9x9' : '3x3')} style={{
             padding: '8px 14px', borderRadius: 12, fontWeight: 800, fontSize: 13, cursor: 'pointer',
             background: boardMode === '9x9' ? 'linear-gradient(135deg,#1565C0,#1976D2)' : '#EEF3FF',
             color: boardMode === '9x9' ? 'white' : '#1565C0',
-            border: `2px solid ${boardMode === '9x9' ? '#1565C0' : '#C5D8F8'}`, transition: 'all 0.2s',
+            border: `2px solid ${boardMode === '9x9' ? '#1565C0' : '#C5D8F8'}`, transition: 'all 0.2s', fontFamily: 'YKompyuta'
           }}>
             {boardMode === '3x3' ? '🔲 9×9 만다라' : '🔳 3×3 기본'}
           </button>
           <button onClick={() => setIsPokedexOpen(true)} style={{
             padding: '8px 14px', borderRadius: 12, fontWeight: 800, fontSize: 13, cursor: 'pointer',
             background: 'linear-gradient(135deg,#E53935,#EF5350)', color: 'white', border: 'none',
-            boxShadow: '0 4px 12px rgba(229,57,53,0.35)',
+            boxShadow: '0 4px 12px rgba(229,57,53,0.35)', fontFamily: 'YKompyuta'
           }}>📖 도감 ({pokedex.length})</button>
         </div>
       </header>
@@ -766,7 +779,7 @@ export default function Home() {
               padding:28, borderRadius:28, maxWidth:420, width:'100%',
               boxShadow:'0 24px 64px rgba(21,101,192,0.2)',
             }} onClick={e => e.stopPropagation()}>
-              <h2 style={{ margin:'0 0 6px', fontSize:20, fontWeight:900, color:'#E53935' }}>🎯 목표 설정</h2>
+              <h2 style={{ margin:'0 0 6px', fontSize:20, fontWeight:900, color:'#E53935', fontFamily: 'YKompyuta' }}>🎯 목표 설정</h2>
               <p style={{ margin:'0 0 20px', fontSize:13, color:'#90A4AE' }}>
                 칸에 목표를 적어보세요!
               </p>
@@ -803,7 +816,9 @@ export default function Home() {
                       display:'flex', flexDirection:'column', alignItems:'center', gap:3,
                       boxShadow: isSelected ? `0 4px 14px ${c.color}55` : 'none',
                     }}>
-                      <EggImg catKey={k} size={24} />
+                      <div style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))' }}>
+                        <EggImg catKey={k} size={40} />
+                      </div>
                       {c.labelKo}
                     </button>
                   );
