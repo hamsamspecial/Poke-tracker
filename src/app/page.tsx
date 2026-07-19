@@ -99,6 +99,7 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<CategoryKey | null>(null);
   const [isPokedexOpen, setIsPokedexOpen] = useState(false);
 
+  // Load habits
   useEffect(() => {
     const h = localStorage.getItem('poke_habits_v3');
     const d = localStorage.getItem('poke_dex_v2');
@@ -153,13 +154,14 @@ export default function Home() {
       nh.lastCheckedDate = today;
 
       if (!nh.pokemon) {
-        setModalData({ title: '알이 움직여요! 🥚✨', desc: '포켓몬이 태어나려 해요!', imgUrl: EGG_SPRITE });
+        const eggImg = CAT[nh.category]?.egg || EGG_SPRITE;
+        setModalData({ title: '알이 빛나요! ✨', desc: '포켓몬이 깨어나려 해요!', imgUrl: eggImg, isHatching: true });
         const starter = await pickStarterByCategory(nh.category);
         const chain = await getEvolutionStages(starter);
         const spriteUrl = await getSprite(chain[0]);
         nh.pokemon = { chain, currentStageIndex: 0, hatched: true, spriteUrl };
         addToPokedex(chain[0], spriteUrl);
-        setTimeout(() => setModalData({ title: '🎉 태어났어요!', desc: `${chain[0].toUpperCase()}가 깨어났어요!`, imgUrl: spriteUrl }), 1500);
+        setTimeout(() => setModalData({ title: '🎉 태어났어요!', desc: `${chain[0].toUpperCase()}가 깨어났어요!`, imgUrl: spriteUrl }), 2000);
       } else {
         const newIdx = stageIndexFromStreak(nh.streak, nh.pokemon.chain.length);
         if (newIdx > nh.pokemon.currentStageIndex) {
@@ -179,6 +181,23 @@ export default function Home() {
       setModalData({ title: '오류 😢', desc: '다시 눌러보세요.', imgUrl: null });
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const undoToday = (habit: Habit, idx: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isProcessing) return;
+    const today = new Date().toLocaleDateString('sv-SE');
+    if (habit.lastCheckedDate === today) {
+      const nh = { ...habit };
+      if (nh.streak > 1) {
+        nh.streak -= 1;
+        nh.lastCheckedDate = new Date(Date.now() - 86400000).toLocaleDateString('sv-SE');
+      } else {
+        nh.streak = 0;
+        nh.lastCheckedDate = null;
+      }
+      const next = [...habits]; next[idx] = nh; saveHabits(next);
     }
   };
 
@@ -213,12 +232,12 @@ export default function Home() {
           <div key="center" style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             borderRadius: 20, padding: 8,
-            background: 'radial-gradient(circle, rgba(227,53,13,0.25) 0%, rgba(26,26,46,0.8) 100%)',
-            border: '3px solid rgba(255,215,0,0.6)',
-            boxShadow: '0 0 32px rgba(227,53,13,0.3)',
+            background: 'linear-gradient(135deg, #FFF3F3 0%, #FFEBEE 100%)',
+            border: '3px solid #E53935',
+            boxShadow: '0 4px 20px rgba(229,57,53,0.25)',
           }}>
-            <PokeballSVG size={64} />
-            <span style={{ marginTop: 6, fontSize: 13, fontWeight: 900, color: '#FFD700' }}>나의 목표</span>
+            <img src="/pokemon-logo.png" alt="목표" style={{ width: 80, height: 'auto', marginBottom: 4 }} />
+            <span style={{ fontSize: 13, fontWeight: 900, color: '#E53935' }}>나의 목표</span>
           </div>
         );
       }
@@ -412,13 +431,20 @@ export default function Home() {
             )}
           </div>
 
-          {/* 완료 표시 */}
           {done && (
             <div style={{
-              marginTop: 5, fontSize: 11, fontWeight: 900, color: '#4CAF50',
-              background: 'rgba(76,175,80,0.2)', padding: '3px 12px', borderRadius: 20,
-              flexShrink: 0,
-            }}>✔ 오늘 완료!</div>
+              marginTop: 5, display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+            }}>
+              <div style={{
+                fontSize: 11, fontWeight: 900, color: '#4CAF50',
+                background: 'rgba(76,175,80,0.2)', padding: '3px 12px', borderRadius: 20,
+              }}>✔ 오늘 완료!</div>
+              <button onClick={(e) => undoToday(habit, realIdx, e)} style={{
+                fontSize: 10, fontWeight: 800, color: '#F44336',
+                background: 'rgba(244,67,54,0.15)', border: 'none', padding: '3px 8px', borderRadius: 20,
+                cursor: 'pointer', transition: 'all 0.2s',
+              }}>↺ 취소</button>
+            </div>
           )}
         </div>
       );
@@ -474,12 +500,6 @@ export default function Home() {
                   <div key={cellIdx} style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     borderRadius: 12,
-                    background: 'radial-gradient(circle, rgba(227,53,13,0.2) 0%, rgba(26,26,46,0.9) 100%)',
-                    border: '2px solid rgba(255,215,0,0.5)',
-                  }}>
-                    <PokeballSVG size={36} />
-                    <span style={{ fontSize: 7, fontWeight: 900, color: '#FFD700', marginTop: 2 }}>목표</span>
-                  </div>
                 );
               }
 
@@ -574,7 +594,14 @@ export default function Home() {
                     maxWidth: '95%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2,
                   }}>{habit.title}</span>
 
-                  {done && <span style={{ fontSize: 7, color: '#4CAF50', marginTop: 1 }}>✔</span>}
+                  {done && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
+                      <span style={{ fontSize: 7, color: '#4CAF50' }}>✔</span>
+                      <button onClick={(e) => undoToday(habit, realIdx, e)} style={{
+                        fontSize: 6, color: '#F44336', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0
+                      }}>↺</button>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -587,53 +614,52 @@ export default function Home() {
   if (loading) return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+      background: 'linear-gradient(160deg, #EEF3FF 0%, #DCEEFF 100%)',
       flexDirection: 'column', gap: 16,
     }}>
       <PokeballSVG size={72} />
-      <p style={{ color: '#FFD700', fontSize: 18, fontWeight: 800 }}>불러오는 중...</p>
+      <p style={{ color: '#E53935', fontSize: 18, fontWeight: 800 }}>불러오는 중...</p>
     </div>
   );
 
   return (
     <main style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%)',
+      background: 'linear-gradient(160deg, #EEF3FF 0%, #DCEEFF 60%, #E8F5E9 100%)',
       padding: '12px 16px',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
-      fontFamily: "'Segoe UI', 'Noto Sans KR', sans-serif",
+      fontFamily: "'Lato', 'Segoe UI', 'Noto Sans KR', sans-serif",
     }}>
 
       {/* ── 헤더 ── */}
       <header style={{
         width: '100%', maxWidth: 960, marginBottom: 14,
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '10px 18px', borderRadius: 20,
-        background: 'rgba(255,255,255,0.06)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,215,0,0.25)',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+        padding: '12px 20px', borderRadius: 20,
+        background: 'white',
+        border: '2px solid #E8EDF8',
+        boxShadow: '0 4px 20px rgba(21,101,192,0.1)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <PokeballSVG size={34} />
+          <img src="/pokeball-title.png" alt="Pokeball" style={{ width: 34, height: 34 }} />
           <div>
-            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: '#FFD700' }}>PokeTracker</h1>
-            <p style={{ margin: 0, fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>만다라트 습관 관리</p>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#E53935', fontFamily: 'YKompyuta' }}>PokeTracker</h1>
+            <p style={{ margin: 0, fontSize: 11, color: '#90A4AE' }}>만다라트 습관 관리</p>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setBoardMode(b => b === '3x3' ? '9x9' : '3x3')} style={{
             padding: '8px 14px', borderRadius: 12, fontWeight: 800, fontSize: 13, cursor: 'pointer',
-            background: boardMode === '9x9' ? 'linear-gradient(135deg,#FFD700,#FFA500)' : 'rgba(255,255,255,0.12)',
-            color: boardMode === '9x9' ? '#1a1a2e' : 'white',
-            border: '1px solid rgba(255,215,0,0.35)', transition: 'all 0.2s',
+            background: boardMode === '9x9' ? 'linear-gradient(135deg,#1565C0,#1976D2)' : '#EEF3FF',
+            color: boardMode === '9x9' ? 'white' : '#1565C0',
+            border: `2px solid ${boardMode === '9x9' ? '#1565C0' : '#C5D8F8'}`, transition: 'all 0.2s',
           }}>
             {boardMode === '3x3' ? '🔲 9×9 만다라' : '🔳 3×3 기본'}
           </button>
           <button onClick={() => setIsPokedexOpen(true)} style={{
             padding: '8px 14px', borderRadius: 12, fontWeight: 800, fontSize: 13, cursor: 'pointer',
-            background: 'linear-gradient(135deg,#E3350D,#FF6B35)', color: 'white', border: 'none',
-            boxShadow: '0 4px 12px rgba(227,53,13,0.4)',
+            background: 'linear-gradient(135deg,#E53935,#EF5350)', color: 'white', border: 'none',
+            boxShadow: '0 4px 12px rgba(229,57,53,0.35)',
           }}>📖 도감 ({pokedex.length})</button>
         </div>
       </header>
@@ -643,17 +669,17 @@ export default function Home() {
         <div style={{ width:'100%', maxWidth:960, marginBottom:12, display:'flex', gap:6, flexWrap:'wrap', justifyContent:'center' }}>
           <button onClick={() => setSelectedCategory(null)} style={{
             padding:'5px 12px', borderRadius:20, fontSize:11, fontWeight:800, cursor:'pointer',
-            background: selectedCategory===null ? 'rgba(255,215,0,0.9)' : 'rgba(255,255,255,0.1)',
-            color: selectedCategory===null ? '#1a1a2e' : 'rgba(255,255,255,0.6)',
-            border:'1px solid rgba(255,215,0,0.3)', transition:'all 0.2s',
+            background: selectedCategory===null ? '#1565C0' : 'white',
+            color: selectedCategory===null ? 'white' : '#546E7A',
+            border:`2px solid ${selectedCategory===null ? '#1565C0' : '#CFD8DC'}`, transition:'all 0.2s',
           }}>전체</button>
           {(Object.entries(CATEGORIES) as [CategoryKey, CatInfo][]).map(([k, c]) => (
             <button key={k} onClick={() => setSelectedCategory(selectedCategory===k ? null : k)} style={{
               padding:'5px 12px', borderRadius:20, fontSize:11, fontWeight:800, cursor:'pointer',
-              background: selectedCategory===k ? c.color : 'rgba(255,255,255,0.08)',
-              color: selectedCategory===k ? 'white' : 'rgba(255,255,255,0.6)',
-              border:`1px solid ${c.color}66`, transition:'all 0.2s',
-              boxShadow: selectedCategory===k ? `0 4px 12px ${c.color}66` : 'none',
+              background: selectedCategory===k ? c.color : 'white',
+              color: selectedCategory===k ? 'white' : c.color,
+              border:`2px solid ${c.color}`, transition:'all 0.2s',
+              boxShadow: selectedCategory===k ? `0 4px 12px ${c.color}55` : 'none',
             }}>{c.emoji} {c.labelKo}</button>
           ))}
         </div>
@@ -663,46 +689,59 @@ export default function Home() {
       <div style={{
         width: '100%', maxWidth: 960, aspectRatio: '1/1',
         padding: 14, borderRadius: 28,
-        background: 'rgba(255,255,255,0.04)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,215,0,0.18)',
-        boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+        background: 'white',
+        border: '2px solid #E8EDF8',
+        boxShadow: '0 8px 32px rgba(21,101,192,0.12)',
       }}>
         {boardMode === '3x3' ? render3x3() : render9x9()}
       </div>
 
-      <p style={{ marginTop:16, color:'rgba(255,255,255,0.35)', fontSize:12, textAlign:'center' }}>
+      <p style={{ marginTop:16, color:'#90A4AE', fontSize:12, textAlign:'center' }}>
         칸을 누르면 포켓몬 알이 부화해요! 🥚 | PokeAPI 연동 완료
       </p>
+
+      {/* ── 푸터 ── */}
+      <footer style={{
+        marginTop: 'auto', paddingTop: 20, paddingBottom: 10,
+        textAlign: 'center', fontSize: 11, color: '#90A4AE', lineHeight: 1.5
+      }}>
+        <div>정보관리책임자: 함주희 (agatha03@dosun.hs.kr)</div>
+        <div>© 2026 Hamsam special. All rights reserved.</div>
+        <div>Poketracker 포켓몬과 만다라트 "도전" 성공하기 l 모두를 위한 SEL 적용.</div>
+      </footer>
 
       {/* ── 이벤트 모달 ── */}
       {modalData && (
         <div style={{
           position:'fixed', inset:0, zIndex:50,
           display:'flex', alignItems:'center', justifyContent:'center', padding:16,
-          background:'rgba(0,0,0,0.65)', backdropFilter:'blur(8px)',
+          background:'rgba(21,101,192,0.15)', backdropFilter:'blur(8px)',
         }} onClick={() => setModalData(null)}>
           <div style={{
-            background:'rgba(26,26,46,0.97)', backdropFilter:'blur(24px)',
-            border:'2px solid rgba(255,215,0,0.4)',
+            background:'white',
+            border:'2px solid #E8EDF8',
             padding:32, borderRadius:28, maxWidth:340, width:'100%',
             display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center',
-            boxShadow:'0 24px 64px rgba(0,0,0,0.8)',
+            boxShadow:'0 24px 64px rgba(21,101,192,0.2)',
           }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ margin:'0 0 14px', fontSize:22, fontWeight:900, color:'#FFD700' }}>{modalData.title}</h2>
+            <h2 style={{ margin:'0 0 14px', fontSize:22, fontWeight:900, color:'#E53935', fontFamily: 'YKompyuta' }}>{modalData.title}</h2>
             {modalData.imgUrl && (
               <div style={{ position:'relative', width:130, height:130, marginBottom:14 }}>
-                <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:'radial-gradient(circle, rgba(255,215,0,0.3) 0%, transparent 70%)' }}/>
+                <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:'radial-gradient(circle, rgba(229,57,53,0.15) 0%, transparent 70%)' }}/>
                 <img src={modalData.imgUrl} alt="event"
-                  style={{ width:'100%', height:'100%', objectFit:'contain', filter:'drop-shadow(0 4px 12px rgba(255,215,0,0.5))' }}/>
+                  style={{
+                    width:'100%', height:'100%', objectFit:'contain',
+                    filter:'drop-shadow(0 4px 12px rgba(229,57,53,0.3))',
+                    animation: (modalData as any).isHatching ? 'eggCrack 1.5s ease-in-out forwards' : 'none'
+                  }}/>
               </div>
             )}
-            <p style={{ margin:'0 0 22px', fontSize:15, color:'rgba(255,255,255,0.85)', fontWeight:600 }}>{modalData.desc}</p>
+            <p style={{ margin:'0 0 22px', fontSize:15, color:'#455A64', fontWeight:600 }}>{modalData.desc}</p>
             <button onClick={() => setModalData(null)} style={{
               width:'100%', padding:'13px', borderRadius:16, border:'none',
-              background:'linear-gradient(135deg,#E3350D,#FF6B35)', color:'white',
+              background:'linear-gradient(135deg,#E53935,#EF5350)', color:'white',
               fontWeight:900, fontSize:16, cursor:'pointer',
-              boxShadow:'0 6px 20px rgba(227,53,13,0.5)',
+              boxShadow:'0 6px 20px rgba(229,57,53,0.4)',
             }}>확인</button>
           </div>
         </div>
@@ -716,20 +755,20 @@ export default function Home() {
           <div style={{
             position:'fixed', inset:0, zIndex:50,
             display:'flex', alignItems:'center', justifyContent:'center', padding:16,
-            background:'rgba(0,0,0,0.65)', backdropFilter:'blur(8px)',
+            background:'rgba(21,101,192,0.15)', backdropFilter:'blur(8px)',
           }} onClick={() => setEditingIndex(null)}>
             <div style={{
-              background:'rgba(26,26,46,0.98)', backdropFilter:'blur(24px)',
-              border:`2px solid ${cat?.color || 'rgba(255,215,0,0.3)'}66`,
+              background:'white',
+              border:`2px solid ${cat?.color || '#E8EDF8'}44`,
               padding:28, borderRadius:28, maxWidth:420, width:'100%',
-              boxShadow:'0 24px 64px rgba(0,0,0,0.8)',
+              boxShadow:'0 24px 64px rgba(21,101,192,0.2)',
             }} onClick={e => e.stopPropagation()}>
-              <h2 style={{ margin:'0 0 6px', fontSize:20, fontWeight:900, color:'#FFD700' }}>🎯 목표 설정</h2>
-              <p style={{ margin:'0 0 20px', fontSize:13, color:'rgba(255,255,255,0.45)' }}>
+              <h2 style={{ margin:'0 0 6px', fontSize:20, fontWeight:900, color:'#E53935' }}>🎯 목표 설정</h2>
+              <p style={{ margin:'0 0 20px', fontSize:13, color:'#90A4AE' }}>
                 칸에 목표를 적어보세요!
               </p>
 
-              <label style={{ display:'block', fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.55)', marginBottom:8 }}>
+              <label style={{ display:'block', fontSize:13, fontWeight:800, color:'#546E7A', marginBottom:8 }}>
                 ✏️ 목표 이름
               </label>
               <input
@@ -740,12 +779,12 @@ export default function Home() {
                 placeholder="예: 매일 물 한 잔 마시기"
                 style={{
                   width:'100%', padding:'12px 16px', borderRadius:14, marginBottom:22,
-                  background:'rgba(255,255,255,0.08)', border:'2px solid rgba(255,255,255,0.18)',
-                  color:'white', fontSize:16, fontWeight:700, outline:'none', boxSizing:'border-box',
+                  background:'#F8FAFF', border:'2px solid #C5D8F8',
+                  color:'#1a237e', fontSize:16, fontWeight:700, outline:'none', boxSizing:'border-box',
                 }}
               />
 
-              <label style={{ display:'block', fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.55)', marginBottom:10 }}>
+              <label style={{ display:'block', fontSize:13, fontWeight:800, color:'#546E7A', marginBottom:10 }}>
                 🥚 카테고리 (포켓몬 종류)
               </label>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:8, marginBottom:24 }}>
@@ -755,11 +794,11 @@ export default function Home() {
                     <button key={k} onClick={() => setEditCategory(k)} style={{
                       padding:'10px 4px', borderRadius:14, fontSize:11, fontWeight:900, cursor:'pointer',
                       border:`2px solid ${c.color}`,
-                      background: isSelected ? c.color : 'transparent',
+                      background: isSelected ? c.color : '#F8FAFF',
                       color: isSelected ? 'white' : c.color,
                       transition:'all 0.2s',
                       display:'flex', flexDirection:'column', alignItems:'center', gap:3,
-                      boxShadow: isSelected ? `0 4px 14px ${c.color}66` : 'none',
+                      boxShadow: isSelected ? `0 4px 14px ${c.color}55` : 'none',
                     }}>
                       <EggImg catKey={k} size={24} />
                       {c.labelKo}
@@ -771,14 +810,14 @@ export default function Home() {
               <div style={{ display:'flex', gap:10 }}>
                 <button onClick={() => setEditingIndex(null)} style={{
                   flex:1, padding:'13px', borderRadius:14,
-                  border:'1px solid rgba(255,255,255,0.18)', background:'transparent',
-                  color:'rgba(255,255,255,0.55)', fontWeight:800, cursor:'pointer', fontSize:14,
+                  border:'2px solid #CFD8DC', background:'#F8FAFF',
+                  color:'#78909C', fontWeight:800, cursor:'pointer', fontSize:14,
                 }}>취소</button>
                 <button onClick={saveEdit} style={{
                   flex:2, padding:'13px', borderRadius:14, border:'none',
-                  background:'linear-gradient(135deg,#FFD700,#FFA500)',
-                  color:'#1a1a2e', fontWeight:900, cursor:'pointer', fontSize:15,
-                  boxShadow:'0 6px 20px rgba(255,215,0,0.45)',
+                  background:'linear-gradient(135deg,#E53935,#EF5350)',
+                  color:'white', fontWeight:900, cursor:'pointer', fontSize:15,
+                  boxShadow:'0 6px 20px rgba(229,57,53,0.4)',
                 }}>✓ 저장하기</button>
               </div>
             </div>
@@ -791,23 +830,23 @@ export default function Home() {
         <div style={{
           position:'fixed', inset:0, zIndex:50,
           display:'flex', alignItems:'center', justifyContent:'center', padding:16,
-          background:'rgba(0,0,0,0.65)', backdropFilter:'blur(8px)',
+          background:'rgba(21,101,192,0.15)', backdropFilter:'blur(8px)',
         }} onClick={() => setIsPokedexOpen(false)}>
           <div style={{
-            background:'rgba(26,26,46,0.97)', backdropFilter:'blur(24px)',
-            border:'2px solid rgba(255,215,0,0.3)', padding:28, borderRadius:28,
+            background:'white',
+            border:'2px solid #E8EDF8', padding:28, borderRadius:28,
             maxWidth:680, width:'100%', maxHeight:'80vh',
             display:'flex', flexDirection:'column',
-            boxShadow:'0 24px 64px rgba(0,0,0,0.8)',
+            boxShadow:'0 24px 64px rgba(21,101,192,0.2)',
           }} onClick={e => e.stopPropagation()}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
-              <h2 style={{ margin:0, fontSize:20, fontWeight:900, color:'#FFD700' }}>
+              <h2 style={{ margin:0, fontSize:20, fontWeight:900, color:'#E53935' }}>
                 📖 나의 도감 ({pokedex.length}종)
               </h2>
               <button onClick={() => setIsPokedexOpen(false)} style={{
                 width:34, height:34, borderRadius:'50%',
-                border:'1px solid rgba(255,255,255,0.2)', background:'rgba(255,255,255,0.1)',
-                color:'white', cursor:'pointer', fontSize:16,
+                border:'2px solid #CFD8DC', background:'#F8FAFF',
+                color:'#546E7A', cursor:'pointer', fontSize:16,
               }}>✕</button>
             </div>
             <div style={{
@@ -818,18 +857,18 @@ export default function Home() {
                 <div key={e.name} style={{
                   display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
                   padding:12, borderRadius:16,
-                  background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)',
+                  background:'#F8FAFF', border:'1px solid #E8EDF8',
                 }}>
                   <img src={e.spriteUrl} alt={e.name}
                     onError={ev => { (ev.currentTarget as HTMLImageElement).src = EGG_SPRITE; }}
-                    style={{ width:52, height:52, objectFit:'contain', filter:'drop-shadow(0 2px 6px rgba(0,0,0,0.5))' }}/>
-                  <span style={{ marginTop:6, fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.75)', textTransform:'capitalize' }}>
+                    style={{ width:52, height:52, objectFit:'contain', filter:'drop-shadow(0 2px 6px rgba(0,0,0,0.2))' }}/>
+                  <span style={{ marginTop:6, fontSize:10, fontWeight:700, color:'#455A64', textTransform:'capitalize' }}>
                     {e.name}
                   </span>
                 </div>
               ))}
               {!pokedex.length && (
-                <div style={{ gridColumn:'1/-1', textAlign:'center', padding:'40px 0', color:'rgba(255,255,255,0.3)' }}>
+                <div style={{ gridColumn:'1/-1', textAlign:'center', padding:'40px 0', color:'#90A4AE' }}>
                   아직 포켓몬이 없어요! 🥚<br/>습관을 완료하면 나타나요!
                 </div>
               )}
@@ -839,13 +878,14 @@ export default function Home() {
       )}
 
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap');
         div:hover > .edit-btn { opacity: 1 !important; }
         .edit-btn { opacity: 0; transition: opacity 0.2s; }
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.3); border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: #EEF3FF; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #C5D8F8; border-radius: 3px; }
         * { box-sizing: border-box; }
-        input::placeholder { color: rgba(255,255,255,0.3); }
+        input::placeholder { color: #B0BEC5; }
 
         @keyframes gaugeShine {
           0%   { transform: translateX(-100%); }
@@ -862,6 +902,16 @@ export default function Home() {
           0%,100% { transform: rotate(0deg); }
           25%  { transform: rotate(-6deg); }
           75%  { transform: rotate(6deg); }
+        }
+        @keyframes eggCrack {
+          0% { transform: scale(1) rotate(0deg); filter: brightness(1) drop-shadow(0 4px 12px rgba(229,57,53,0.3)); }
+          15% { transform: scale(1.1) rotate(-10deg); filter: brightness(1.2) drop-shadow(0 0 10px #FFD700); }
+          30% { transform: scale(1.15) rotate(10deg); filter: brightness(1.4) drop-shadow(0 0 20px #FFD700); }
+          45% { transform: scale(1.2) rotate(-15deg); filter: brightness(1.6) drop-shadow(0 0 30px #FFF); }
+          60% { transform: scale(1.25) rotate(15deg); filter: brightness(1.8) drop-shadow(0 0 40px #FFF); }
+          75% { transform: scale(1.3) rotate(-10deg); filter: brightness(2) drop-shadow(0 0 50px #FFF); opacity: 1; }
+          90% { transform: scale(1.4) rotate(0deg); filter: brightness(3) drop-shadow(0 0 60px #FFF); opacity: 0.5; }
+          100% { transform: scale(0); opacity: 0; filter: brightness(3); }
         }
       `}</style>
     </main>

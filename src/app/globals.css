@@ -1,5 +1,12 @@
 @import "tailwindcss";
+@import url('https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css');
 
+@font-face {
+    font-family: 'YKompyuta';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_11-01@1.0/Ycomputer-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-display: swap;
+}
 :root {
   --background: #ffffff;
   --foreground: #222222;
