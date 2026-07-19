@@ -92,7 +92,7 @@ export default function Home() {
   const [pokedex, setPokedex] = useState<PokedexEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [modalData, setModalData] = useState<{ title: string; desc: string; imgUrl: string | null } | null>(null);
+  const [modalData, setModalData] = useState<{ title: string; desc: string; imgUrl: string | null; isHatching?: boolean } | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editCategory, setEditCategory] = useState<CategoryKey>('life');
