@@ -2,14 +2,21 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #222222;
+  --primary: #ff385c;
+  --surface: #f7f7f7;
+  --muted: #6a6a6a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-primary: var(--primary);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --font-sans: 'Airbnb Cereal VF', Circular, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono);
+  /* 5개 카테고리 고정 컬러 (절대 변경 금지) */
   --color-life: #E3350D;
   --color-study: #F6C244;
   --color-health: #2A75BB;
@@ -19,8 +26,10 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #222222;
+    --foreground: #ffffff;
+    --surface: #3f3f3f;
+    --muted: #929292;
   }
 }
 
