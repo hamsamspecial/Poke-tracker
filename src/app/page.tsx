@@ -197,6 +197,7 @@ export default function Home() {
       } else {
         nh.streak = 0;
         nh.lastCheckedDate = null;
+        nh.pokemon = null;
       }
       const next = [...habits]; next[idx] = nh; saveHabits(next);
     }
@@ -312,9 +313,10 @@ export default function Home() {
 
           {/* 카테고리 뱃지 */}
           <div style={{
-            fontSize: 11, fontWeight: 800, color: cat.color,
-            background: 'rgba(0,0,0,0.45)', padding: '3px 12px', borderRadius: 20,
+            fontSize: 12, fontWeight: 900, color: cat.color,
+            background: 'white', padding: '3px 12px', borderRadius: 20,
             marginBottom: 8, letterSpacing: '-0.3px', flexShrink: 0,
+            boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
           }}>
             {cat.emoji} {cat.labelKo}
           </div>
@@ -430,7 +432,7 @@ export default function Home() {
             maxWidth: '95%', wordBreak: 'keep-all', fontFamily: 'YKompyuta'
           }}>
             {habit?.title || (
-              <span style={{ color: cat.color, opacity: 0.8 }}>+ 목표 입력</span>
+              <span style={{ color: cat.color, opacity: 0.9 }}>새목표 ✏️</span>
             )}
           </div>
 
@@ -552,7 +554,7 @@ export default function Home() {
                     <div style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))', opacity: 0.5 }}>
                         {cat && <EggImg catKey={catKey} size={18} />}
                     </div>
-                    <span style={{ fontSize: 6, color: 'rgba(255,255,255,0.25)', marginTop: 2, fontWeight: 700 }}>+ 추가</span>
+                    <span style={{ fontSize: 7, color: cat?.color || 'white', marginTop: 2, fontWeight: 800, fontFamily: 'YKompyuta' }}>새목표 ✏️</span>
                   </div>
                 );
               }
@@ -598,9 +600,10 @@ export default function Home() {
                   </div>
 
                   <span style={{
-                    fontSize: 8 * fontScale, fontWeight: 700, color: cat?.color || 'white', textAlign: 'center',
-                    background: 'rgba(0,0,0,0.4)', padding: '1px 4px', borderRadius: 5,
-                    maxWidth: '95%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2, fontFamily: 'YKompyuta'
+                    fontSize: 8 * fontScale, fontWeight: 900, color: cat?.color || 'black', textAlign: 'center',
+                    background: 'white', padding: '1px 6px', borderRadius: 6,
+                    maxWidth: '95%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2, fontFamily: 'YKompyuta',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
                   }}>{habit.title}</span>
 
                   {done && (
@@ -657,13 +660,15 @@ export default function Home() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setFontScale(s => s >= 1.4 ? 1 : s + 0.2)} style={{
-            padding: '8px 14px', borderRadius: 12, fontWeight: 800, fontSize: 13, cursor: 'pointer',
-            background: fontScale === 1 ? '#FFF8E1' : fontScale === 1.2 ? '#FFECB3' : '#FFD54F',
-            color: '#F57F17', border: '2px solid #FFE082', transition: 'all 0.2s', fontFamily: 'YKompyuta'
-          }}>
-            {fontScale === 1 ? '글씨 1단계' : fontScale === 1.2 ? '글씨 2단계' : '글씨 3단계'} 🔍
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#FFF8E1', padding: '4px 8px', borderRadius: 12, border: '2px solid #FFE082' }}>
+            <span style={{ fontSize: 13, fontWeight: 900, color: '#F57F17', fontFamily: 'YKompyuta' }}>글씨크기</span>
+            <button onClick={() => setFontScale(s => Math.max(0.8, s - 0.2))} style={{
+              background: '#FFD54F', color: '#F57F17', border: 'none', borderRadius: 6, padding: '2px 8px', fontWeight: 900, cursor: 'pointer', fontFamily: 'YKompyuta'
+            }}>-</button>
+            <button onClick={() => setFontScale(s => Math.min(1.8, s + 0.2))} style={{
+              background: '#FFD54F', color: '#F57F17', border: 'none', borderRadius: 6, padding: '2px 8px', fontWeight: 900, cursor: 'pointer', fontFamily: 'YKompyuta'
+            }}>+</button>
+          </div>
           <button onClick={() => setBoardMode(b => b === '3x3' ? '9x9' : '3x3')} style={{
             padding: '8px 14px', borderRadius: 12, fontWeight: 800, fontSize: 13, cursor: 'pointer',
             background: boardMode === '9x9' ? 'linear-gradient(135deg,#1565C0,#1976D2)' : '#EEF3FF',
