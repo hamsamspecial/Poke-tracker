@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css');
+@import "tailwindcss";
 
 @font-face {
     font-family: 'YKompyuta';

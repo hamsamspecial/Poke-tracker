@@ -500,10 +500,13 @@ export default function Home() {
                   <div key={cellIdx} style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     borderRadius: 12,
+                    background: 'linear-gradient(135deg, #FFF3F3 0%, #FFEBEE 100%)',
+                    border: '2px solid #E53935',
+                  }}>
+                    <img src="/pokeball-title.png" alt="메인" style={{ width: 36, height: 36 }} />
+                  </div>
                 );
               }
-
-              // 서브블록 중앙 (카테고리 미러)
               if (blockIdx !== 4 && cellIdx === 4) {
                 const habit = habits[realIdx];
                 return (
